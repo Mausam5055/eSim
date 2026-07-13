@@ -30,7 +30,7 @@ from . import Microcontroller
 from . import Source
 from . import SubcircuitTab
 from . import TrackWidget
-from .Processing import PrcocessNetlist
+from .Processing import ProcessNetlist
 
 
 class MainWindow(QtWidgets.QWidget):
@@ -63,7 +63,7 @@ class MainWindow(QtWidgets.QWidget):
         TrackWidget.TrackWidget.reset()
 
         # Object of Processing
-        obj_proc = PrcocessNetlist()
+        obj_proc = ProcessNetlist()
 
         # Read the netlist, ie the .cir file
         kicadNetlist = obj_proc.readNetlist(self.kicadFile)
@@ -124,7 +124,7 @@ class MainWindow(QtWidgets.QWidget):
             self.msg = QtWidgets.QErrorMessage()
             self.msg.setModal(True)
             self.msg.setWindowTitle("Unknown Models")
-            self.content = "Your schematic contain unknown model " + \
+            self.content = "Your schematic contains unknown models: " + \
                            ', '.join(unknownModelList)
             self.msg.showMessage(self.content)
             self.msg.exec()
@@ -133,8 +133,8 @@ class MainWindow(QtWidgets.QWidget):
             self.msg = QtWidgets.QErrorMessage()
             self.msg.setModal(True)
             self.msg.setWindowTitle("Multiple Models")
-            self.mcontent = "Look like you have duplicate model in \
-            modelParamXML directory " + \
+            self.mcontent = "Looks like you have duplicate models in the \
+            modelParamXML directory: " + \
                             ', '.join(multipleModelList[0])
             self.msg.showMessage(self.mcontent)
             self.msg.exec()
@@ -146,23 +146,181 @@ class MainWindow(QtWidgets.QWidget):
         """
         - This function create main window of KiCad to Ngspice converter
         - Two components
-            - createcreateConvertWidget
+            - createConvertWidget
             - Convert button => callConvert
         """
         self.vbox = QtWidgets.QVBoxLayout()
         self.hbox = QtWidgets.QHBoxLayout()
         self.hbox.addStretch(1)
+
+        self.theme_btn = QtWidgets.QPushButton("Toggle Dark Mode")
+        self.theme_btn.clicked.connect(self.toggle_theme)
+        self.hbox.addWidget(self.theme_btn)
+
         self.convertbtn = QtWidgets.QPushButton("Convert")
         self.convertbtn.clicked.connect(self.callConvert)
         self.hbox.addWidget(self.convertbtn)
-        self.vbox.addWidget(self.createcreateConvertWidget())
+        self.vbox.addWidget(self.createConvertWidget())
         self.vbox.addLayout(self.hbox)
+
+        self.light_stylesheet = """
+            QWidget {
+                background-color: #ffffff;
+                color: #333333;
+            }
+            QPushButton {
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #ced4da;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-size: 13px;
+                min-width: 120px;
+            }
+            QPushButton:hover {
+                background-color: #f8f9fa;
+                border-color: #adb5bd;
+            }
+            QPushButton:pressed {
+                background-color: #e9ecef;
+            }
+            QTabWidget::pane {
+                border: 1px solid #e0e0e0;
+                background-color: #ffffff;
+            }
+            QTabBar::tab {
+                background: #f8f9fa;
+                color: #333333;
+                padding: 8px 15px;
+                border: 1px solid #e0e0e0;
+                border-bottom: none;
+                margin-right: 2px;
+            }
+            QTabBar::tab:selected {
+                background: #ffffff;
+                font-weight: bold;
+                border-top: 3px solid #3498db;
+            }
+            QLineEdit, QTextEdit {
+                background-color: #fcfcfc;
+                color: #333333;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 4px 8px;
+            }
+            QComboBox {
+                background-color: #ffffff;
+                color: #333333;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                padding: 4px 8px;
+                min-height: 28px;
+            }
+            QCheckBox {
+                spacing: 8px;
+                padding: 5px;
+            }
+            QGroupBox {
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                margin-top: 2ex;
+                font-weight: bold;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top center;
+                padding: 0 3px;
+                background-color: #ffffff;
+            }
+        """
+
+        self.dark_stylesheet = """
+            QWidget {
+                background-color: #2b2b2b;
+                color: #ffffff;
+            }
+            QPushButton {
+                background-color: #3c3f41;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-size: 13px;
+                min-width: 120px;
+            }
+            QPushButton:hover {
+                background-color: #4b4f52;
+                border-color: #777777;
+            }
+            QPushButton:pressed {
+                background-color: #5b5f62;
+            }
+            QTabWidget::pane {
+                border: 1px solid #444444;
+                background-color: #2b2b2b;
+            }
+            QTabBar::tab {
+                background: #3c3f41;
+                color: #ffffff;
+                padding: 8px 15px;
+                border: 1px solid #444444;
+                border-bottom: none;
+                margin-right: 2px;
+            }
+            QTabBar::tab:selected {
+                background: #2b2b2b;
+                font-weight: bold;
+                border-top: 3px solid #3498db;
+            }
+            QLineEdit, QTextEdit {
+                background-color: #333333;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 4px 8px;
+            }
+            QComboBox {
+                background-color: #3c3f41;
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 4px;
+                padding: 4px 8px;
+                min-height: 28px;
+            }
+            QCheckBox {
+                spacing: 8px;
+                padding: 5px;
+            }
+            QGroupBox {
+                border: 1px solid #555555;
+                border-radius: 4px;
+                margin-top: 2ex;
+                font-weight: bold;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top center;
+                padding: 0 3px;
+                background-color: #2b2b2b;
+            }
+        """
+
+        self.is_light_theme = True
+        self.setStyleSheet(self.light_stylesheet)
 
         self.setLayout(self.vbox)
         self.setWindowTitle("Kicad To NgSpice Converter")
         self.show()
 
-    def createcreateConvertWidget(self):
+    def toggle_theme(self):
+        if self.is_light_theme:
+            self.setStyleSheet(self.dark_stylesheet)
+            self.is_light_theme = False
+        else:
+            self.setStyleSheet(self.light_stylesheet)
+            self.is_light_theme = True
+
+    def createConvertWidget(self):
         """
         - Contains the tabs for various convertor elements
             - Analysis            => obj_analysis

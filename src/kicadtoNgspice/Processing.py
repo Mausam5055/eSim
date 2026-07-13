@@ -3,7 +3,7 @@ import os
 from xml.etree import ElementTree as ET
 
 
-class PrcocessNetlist:
+class ProcessNetlist:
     """
     - This class include all the function required for pre-proccessing of
       netlist before converting to Ngspice Netlist.
@@ -283,7 +283,7 @@ class PrcocessNetlist:
                     count = 0  # Check if model of same name is present
                     modelPath = []
                     all_dir = [x[0]
-                               for x in os.walk(PrcocessNetlist.modelxmlDIR)]
+                               for x in os.walk(ProcessNetlist.modelxmlDIR)]
                     for each_dir in all_dir:
                         all_file = os.listdir(each_dir)
                         if xmlfile in all_file:
